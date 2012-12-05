@@ -1,0 +1,38 @@
+<?php
+/**
+ * @file chinaaregion_migrate module file
+ */
+
+/*
+ * implement hook_migrate_api().
+ */
+function chinaregion_migrate_migrate_api() {
+  $api = array(
+    'api' => 2,
+  );
+  return $api;
+}
+
+
+/**
+ * implement hook_menu
+ */
+function chinaregion_migrate_menu() {
+  $items = array();
+  $items['admin/reports/chinaregion_debug'] = array(
+    'title' => 'Chinaregion debug',
+    'page callback' => 'chinaregion_migrate_debug_page',
+    'access callback' => TRUE
+  );
+  return $items;
+}
+
+/**
+ * this page callback just do some debug
+ */
+function chinaregion_migrate_debug_page() {
+  $content = array();
+  $field = field_info_instance('taxonomy_term', 'chinaregion_migrate_code', 'chinaregion_migrate_region');
+  $content['content'] = array('#markup'=>htmlentities(var_export($field, true)));
+  return $content;
+}

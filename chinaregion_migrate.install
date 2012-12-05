@@ -1,0 +1,140 @@
+<?php
+/**
+ * @file chinaregion_migrate module installation
+ */
+
+function chinaregion_migrate_schema() {
+  $schema = array();
+  $schema['chinaregion_migrate_area'] = chinaregion_migrate_schema_area();
+  return $schema;
+}
+
+function chinaregion_migrate_schema_area() {
+  return array (
+    'description' => 'all area',
+    'fields' => array(
+      'aid' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'area id',
+      ),
+      'parent_id' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => '0',
+      ),
+      'parent_code' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '0',
+      ),
+      'code' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+      ),
+      'level' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
+      ),
+    ),
+    'primary key' => array('aid'),
+  );
+}
+
+function chinaregion_migrate_install() {
+  $description = st('vocabulary for china region');
+  $vocabulary = (object) array(
+    'name' => 'China region',
+    'description' => $description,
+    'machine_name' => 'chinaregion_migrate_region',
+  );
+  taxonomy_vocabulary_save($vocabulary);
+
+  // create field
+  foreach (_chinaregion_migrate_fields() as $key=>$field) {
+    if (!field_info_field($key)) {
+      field_create_field($field);
+    }
+  }
+
+  // create field instance
+  foreach (_chinaregion_migrate_field_instances() as $key=>$instance) {
+    if (!field_info_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
+      field_create_instance($instance);
+    }
+  }
+}
+
+function chinaregion_migrate_uninstall() {
+  if ($vids = taxonomy_vocabulary_load_multiple(array(), array('machine_name' => 'chinaregion_migrate_region'))) {
+    taxonomy_vocabulary_delete(key($vids));
+  }
+
+  foreach (_chinaregion_migrate_fields() as $key=>$field) {
+    if (!field_info_field($key)) {
+      field_delete_field($field);
+    }
+  }
+
+  foreach (_chinaregion_migrate_field_instances() as $key=>$instance) {
+    if (field_info_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
+      field_delete_instance($instance);
+    }
+  }
+
+  field_purge_batch(1000);
+}
+
+function _chinaregion_migrate_fields() {
+  return array(
+    'chinaregion_migrate_code' => array(
+      'field_name' => 'chinaregion_migrate_code',
+      'type' => 'text',
+      'cardinality' => 1,
+      'settings' => array(
+        'max_length' => 10
+      )
+    ),
+    'chinaregion_migrate_level' => array(
+      'field_name' => 'chinaregion_migrate_level',
+      'type' => 'number_integer',
+      'cardinality' => 1,
+      'settings' => array(
+        'max_length' => 2
+      )
+    ),
+  );
+}
+
+function _chinaregion_migrate_field_instances() {
+  $t = get_t();
+  return array(
+    'chinaregion_migrate_code' => array(
+      'field_name' => 'chinaregion_migrate_code',
+      'entity_type' => 'taxonomy_term',
+      'label' => $t('Region code'),
+      'bundle' => 'chinaregion_migrate_region',
+      'widget' => array(
+        'type' => 'text_textfield',
+      ),
+    ),
+    'chinaregion_migrate_level' => array(
+      'field_name' => 'chinaregion_migrate_level',
+      'entity_type' => 'taxonomy_term',
+      'label' => $t('Level'),
+      'bundle' => 'chinaregion_migrate_region',
+    ),
+  );
+}
+
+function chinaregion_migrate_disable() {
+  Migration::deregisterMigration('ChinaRegion');
+}

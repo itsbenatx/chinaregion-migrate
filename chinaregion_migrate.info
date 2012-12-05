@@ -1,0 +1,10 @@
+name = "Migration china region"
+description = "Import china region into drupal as taxonomy"
+package = "Development"
+core = 7.x
+dependencies[] = migrate
+dependencies[] = taxonomy
+
+files[] = chinaregion_migrate.module
+files[] = chinaregion_migrate.inc
+files[] = chinaregion_migrate.install
